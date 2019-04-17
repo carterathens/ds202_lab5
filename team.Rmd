@@ -53,12 +53,21 @@ Load the person table. Identify drivers (PER_TYP == 1, see fars manual) and subs
 ```{r}
 drivers <- per %>% filter(PER_TYP == 1)
 
-drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(DAY_WEEK) %>% summarise(count = n()) %>% ggplot(aes(x=DAY_WEEK)) + scale_x_continuous(breaks=seq(1,7,1)) + geom_bar(aes(weight=count))
+drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(DAY_WEEK) %>% summarise(count = n()) %>% ggplot(aes(x=DAY_WEEK)) + scale_x_continuous(breaks=seq(1,7,1)) + geom_bar(aes(weight=count)) + xlab("Day of Week (1 is Sunday, 7 is Saturday)") + ylab("Accidents") + ggtitle("Accidents Per Day of Week")
 # There are more accidents on Sunday, Friday, and Saturday.
 
-drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(HOUR) %>% summarise(count = n()) %>% ggplot(aes(x=HOUR)) + scale_x_continuous(breaks=seq(0,23,1)) + geom_bar(aes(weight=count))
+drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(HOUR) %>% summarise(count = n()) %>% ggplot(aes(x=HOUR)) + scale_x_continuous(breaks=seq(0,23,1)) + geom_bar(aes(weight=count)) + xlab("Hour") + ylab("Accidents") + ggtitle("Accidents Per Hour")
 # Most accidents happen during rush hour when people are getting off work.
 
-drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(SEX) %>% summarise(count = n()) %>% ggplot(aes(x=SEX)) + geom_bar(aes(weight=count))
+drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(SEX) %>% summarise(count = n()) %>% ggplot(aes(x=SEX)) + geom_bar(aes(weight=count)) + scale_x_continuous(breaks=seq(0,2,1)) + xlim(0,3) + xlab("Sex (1 is male, 2 is female)") + ylab("Accidents") + ggtitle("Accidents Per Sex")
 # Men are involved in accidents significantly more often than women.
+```
+
+
+Part three: Connecting data and make maps
+
+
+Now plot a choropleth map of accidents on a county level. Read the description for the STATE and COUNTY columns in the FARS manual. Visualize the number of accidents in each county using a choropleth map. To do this, you need to join the accident data, GLCs, and appropriate map data. Can you find seasonal trends in accident occurrences in different states? Is summer or winter more dangerous? Why?
+```{r}
+
 ```
