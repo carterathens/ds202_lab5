@@ -10,7 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-library("tidyverse")
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(tidyverse)
 acc <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/accident.csv", stringsAsFactors = FALSE)
 per <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/person.csv", stringsAsFactors = FALSE)
 names(acc)
@@ -40,4 +43,22 @@ What is the number of accidents with at least one drunk driver (use variable DRU
 ```{r}
 numAccWithDrunkDriver <- filter(acc, DRUNK_DR > 0)
 dim(numAccWithDrunkDriver)
+```
+
+
+Part two: Connecting data
+
+
+Load the person table. Identify drivers (PER_TYP == 1, see fars manual) and subset on them. Join accident and driver table (work out which variable(s) to use). Tally the number of accidents by day of the week (DAY_WEEK), hour of the day (HOUR) and gender (SEX). Visualize the results!
+```{r}
+drivers <- per %>% filter(PER_TYP == 1)
+
+drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(DAY_WEEK) %>% summarise(count = n()) %>% ggplot(aes(x=DAY_WEEK)) + scale_x_continuous(breaks=seq(1,7,1)) + geom_bar(aes(weight=count))
+# There are more accidents on Sunday, Friday, and Saturday.
+
+drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(HOUR) %>% summarise(count = n()) %>% ggplot(aes(x=HOUR)) + scale_x_continuous(breaks=seq(0,23,1)) + geom_bar(aes(weight=count))
+# Most accidents happen during rush hour when people are getting off work.
+
+drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(SEX) %>% summarise(count = n()) %>% ggplot(aes(x=SEX)) + geom_bar(aes(weight=count))
+# Men are involved in accidents significantly more often than women.
 ```
