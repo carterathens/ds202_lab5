@@ -1,7 +1,5 @@
 ---
-title: "team"
-author: "Carter Athens and Max Ruehle"
-date: "April 16, 2019"
+title: "MaxRuehle"
 output: html_document
 ---
 
@@ -16,34 +14,31 @@ library(lubridate)
 library(tidyverse)
 library(readxl)
 acc <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/accident.csv", stringsAsFactors = FALSE)
-per <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/person.csv", stringsAsFactors = FALSE)
-names(acc)
-names(per)
 ```
 
 Part one: Accident data
 
 
 Are there some days of the week where more accidents happen than on others (use variable DAY_WEEK)? 
-The most accidents happen on Saturday. Sunday and Friday also have a lot more accidents than the rest of the week.
 ```{r}
-ggplot(acc, aes(x=DAY_WEEK)) + geom_histogram(color="black", binwidth = .5) + scale_x_continuous(breaks=seq(1,7,1)) + xlab("Day of Week (1 is Sunday, 7 is Saturday)") + ylab("Accidents") + ggtitle("Accidents Per Day of Week")
+ggplot(acc, aes(x=DAY_WEEK)) + geom_histogram(color="black", binwidth = .5) + xlab("Day of Week") + ylab("Accidents") + ggtitle("Accidents Per Day of Week") + scale_x_continuous(breaks=seq(1,7,1))
+#Lots of accidents are happening on Friday, Saturday, and Sunday. This is the weekend so more people are usually driving then.
 ```
 
 
 What time of the day do accidents happen (use variable HOUR)?
-Most accidents happen around hour 18. This is because most people are getting off work.
 ```{r}
-acc <- acc[!(acc$HOUR == "99"),] # The HOUR column has some wrong values so I removed them
+acc <- acc[!(acc$HOUR == "99"),] # For some reason there was a value at 99 hours.
 ggplot(acc, aes(x=HOUR)) + geom_histogram(color="black", binwidth = .5) + scale_x_continuous(breaks=seq(0,23,1)) + xlab("Hour") + ylab("Accidents") + ggtitle("Accidents Per Hour")
+#Lots of accidents are happening around the 17-19 hour range. This is about 5pm to 7-pm, usually rush hour where there is lots of traffic and more chances to get into accidents.
 ```
 
 
 What is the number of accidents with at least one drunk driver (use variable DRUNK_DR)?
-8,769 accidents involved at least one drunk driver.
 ```{r}
-numAccWithDrunkDriver <- filter(acc, DRUNK_DR > 0)
-dim(numAccWithDrunkDriver)
+accdd <- filter(acc, DRUNK_DR > 0)
+dim(accdd)
+#There are 8667 accidents that involve at least one drunk driver
 ```
 
 
@@ -52,16 +47,18 @@ Part two: Connecting data
 
 Load the person table. Identify drivers (PER_TYP == 1, see fars manual) and subset on them. Join accident and driver table (work out which variable(s) to use). Tally the number of accidents by day of the week (DAY_WEEK), hour of the day (HOUR) and gender (SEX). Visualize the results!
 ```{r}
+per <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/person.csv", stringsAsFactors = FALSE)
+
 drivers <- per %>% filter(PER_TYP == 1)
 
-drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(DAY_WEEK) %>% summarise(count = n()) %>% ggplot(aes(x=DAY_WEEK)) + scale_x_continuous(breaks=seq(1,7,1)) + geom_bar(aes(weight=count)) + xlab("Day of Week (1 is Sunday, 7 is Saturday)") + ylab("Accidents") + ggtitle("Accidents Per Day of Week")
-# There are more accidents on Sunday, Friday, and Saturday.
+drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(DAY_WEEK) %>% summarise(count = n()) %>% ggplot(aes(x=DAY_WEEK)) + scale_x_continuous(breaks=seq(1,7,1)) + geom_bar(aes(weight=count)) + xlab("Day of Week") + ylab("Accidents") + ggtitle("Accidents Per Day of Week")
+# Accidents are more likely to happen on the weekend.
 
 drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(HOUR) %>% summarise(count = n()) %>% ggplot(aes(x=HOUR)) + scale_x_continuous(breaks=seq(0,23,1)) + geom_bar(aes(weight=count)) + xlab("Hour") + ylab("Accidents") + ggtitle("Accidents Per Hour")
-# Most accidents happen during rush hour when people are getting off work.
+# Accidents are more likely to occur during the rush hour of the day, mostly from 5-8pm.
 
-drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(SEX) %>% summarise(count = n()) %>% ggplot(aes(x=SEX)) + geom_bar(aes(weight=count)) + scale_x_continuous(breaks=seq(0,2,1)) + xlim(0,3) + xlab("Sex (1 is male, 2 is female)") + ylab("Accidents") + ggtitle("Accidents Per Sex")
-# Men are involved in accidents significantly more often than women.
+drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(SEX) %>% summarise(count = n()) %>% ggplot(aes(x=SEX)) + geom_bar(aes(weight=count)) + scale_x_continuous(breaks=seq(0,2,1)) + xlim(0,3) + xlab("1 = Male, 2 = Female") + ylab("Accidents") + ggtitle("Accidents Per Sex")
+# Men are more likely to get involved in accidents then are women.
 ```
 
 
@@ -83,7 +80,7 @@ dat1 <- inner_join(acc1, glc2, by = 'STATE')
 states1 <- inner_join(dat1, states, by = 'State Name')
 ggplot(states1, aes(x = long, y = lat, fill = Accidents)) + geom_polygon(aes(group=group))
 
-#We were not able to figure out how to do the counties because there were many counties with the same county code. I decided to do state data instead. It shows that California, Texas, and Florida have the most accidents out of all the states. They have some of the largest populations in the country so that would make sense. 
+#I was not able to figure out how to do the counties because there were many counties with the same county code. I decided to do state data instead. It shows that California, Texas, and Florida have the most accidents out of all the states. They have some of the largest populations in the country so that would make sense. 
 
 #Winter would have more accidents because the roads are more slippery and that often causes more accidents.
 ```
