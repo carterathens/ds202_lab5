@@ -15,6 +15,7 @@ library(dplyr)
 library(ggplot2)
 library(lubridate)
 library(tidyverse)
+library(readxl)
 acc <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/accident.csv", stringsAsFactors = FALSE)
 per <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/person.csv", stringsAsFactors = FALSE)
 names(acc)
@@ -44,6 +45,7 @@ What is the number of accidents with at least one drunk driver (use variable DRU
 ```{r}
 numAccWithDrunkDriver <- filter(acc, DRUNK_DR > 0)
 dim(numAccWithDrunkDriver)
+print(dim(numAccWithDrunkDriver))
 ```
 
 
@@ -64,13 +66,30 @@ drivers %>% select(-c(HOUR)) %>% left_join(acc, by="ST_CASE") %>% group_by(SEX) 
 # Men are involved in accidents significantly more often than women.
 ```
 
+Part three: Connecting data and make maps
 
 
-```{r}
-
-```
-
+Now plot a choropleth map of accidents on a county level. Read the description for the STATE and COUNTY columns in the FARS manual. Visualize the number of accidents in each county using a choropleth map. To do this, you need to join the accident data, GLCs, and appropriate map data. Can you find seasonal trends in accident occurrences in different states? Is summer or winter more dangerous? Why?
 
 ```{r}
+states <- map_data('state')
+glc <- read_excel("FRPP GLC United States.xlsx", skip = 1)
 
+acc1 <- acc %>% group_by(STATE) %>% summarize(Accidents = n())
+colnames(glc)[colnames(glc) == 'State Code'] <- 'STATE'
+glc$STATE <- as.numeric(glc$STATE)
+states$region <- toupper(states$region)
+colnames(states)[colnames(states) == 'region'] <- 'State Name'
+glc1 <- glc %>% select(`State Name`, STATE)
+glc2 <- distinct(glc1)
+dat1 <- inner_join(acc1, glc2, by = 'STATE')
+states1 <- inner_join(dat1, states, by = 'State Name')
+
+ggplot(states1, aes(x = long, y = lat, fill = Accidents)) + geom_polygon(aes(group = group))
 ```
+
+I dont know how to do the counties because there were multiple counties with a duplicate code, so I used the state data instead. 
+
+California, Texas, and Florida have the most amount of accidents but this probably doesn't mean much because their populations are much higher than the rest of the other states.
+
+The winter months in more northern states would have more accidents because of the poor road conditions. The more southern states wouldn't see this trend as they don't have the same weather.
